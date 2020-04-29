@@ -29,7 +29,7 @@ class CreateTransactionService {
     const { total } = await transactionRepository.getBalance();
 
     if (type === 'outcome' && value > total) {
-      throw new AppError('Outcome transaction not possible.', 401);
+      throw new AppError('Outcome transaction not possible.');
     }
 
     let category = await categoryRepository.findOne({
