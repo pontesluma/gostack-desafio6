@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { getCustomRepository, getRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import CreateTransactionService from '../services/CreateTransactionService';
@@ -8,7 +8,6 @@ import DeleteTransactionService from '../services/DeleteTransactionService';
 import ImportTransactionsService from '../services/ImportTransactionsService';
 
 import Category from '../models/Category';
-import Transaction from '../models/Transaction';
 import uploadConfig from '../config/upload';
 
 const upload = multer(uploadConfig);
@@ -27,38 +26,12 @@ const transactionsRouter = Router();
 
 transactionsRouter.get('/', async (request, response) => {
   const transactionsRepository = getCustomRepository(TransactionsRepository);
-  const categoriesRepository = getRepository(Category);
 
   const transactions = await transactionsRepository.find();
-  const categories = await categoriesRepository.find();
-
-  function assembleTransactionsAndCategories(
-    transaction: Transaction,
-  ): TransactionWithCategory {
-    const matchedCategory = categories.find(
-      category => category.id === transaction.category_id,
-    );
-
-    const transactionWithCategory: TransactionWithCategory = {
-      id: transaction.id,
-      title: transaction.title,
-      type: transaction.type,
-      value: transaction.value,
-      category: matchedCategory,
-      created_at: transaction.created_at,
-      updated_at: transaction.updated_at,
-    };
-
-    return transactionWithCategory;
-  }
-
-  const transactionsAndCategories = transactions.map(transaction =>
-    assembleTransactionsAndCategories(transaction),
-  );
 
   const balance = await transactionsRepository.getBalance();
 
-  return response.json({ transactions: transactionsAndCategories, balance });
+  return response.json({ transactions, balance });
 });
 
 transactionsRouter.post('/', async (request, response) => {
